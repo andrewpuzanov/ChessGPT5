@@ -1,16 +1,26 @@
 
-/* Classic Chess — v24f (AI move animation + 25% slower animations; click & drag coexist) */
+/* Classic Chess — v24j
+   - Working baseline from v24f/h
+   - Click-to-move + Drag-and-drop
+   - Smooth animations for human and AI (225ms)
+   - AI/human use ghost-piece animation center-to-center (no snap)
+   - FEN button hidden on mobile (CSS + tiny JS fallback)
+*/
 const FILES=['a','b','c','d','e','f','g','h'];
 const FILE_IDX={a:0,b:1,c:2,d:3,e:4,f:5,g:6,h:7};
 const START_FEN="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
+// Helpers
 const isWhite=p=>p===p.toUpperCase();
 const inBounds=(f,r)=>f>=0&&f<8&&r>=0&&r<8;
 const cloneBoard=b=>b.map(r=>r.slice());
 const toSq=(f,r)=>FILES[f]+(r+1);
 
-/* Glyphs only: swapped King/Queen shapes (as in v23 series) */
+// Swapped glyphs per your spec
 const PIECE_UNICODE={'P':'♙','N':'♘','B':'♗','R':'♖','Q':'♔','K':'♕','p':'♟','n':'♞','b':'♝','r':'♜','q':'♚','k':'♛'};
+
+// Simple toast
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.remove('hidden'); setTimeout(()=>t.classList.add('hidden'), 2000); }
 
 class ChessEngine{
   constructor(fen=START_FEN){ this.loadFEN(fen); this.history=[]; this.positionCounts=new Map(); this.recordPosition(); }
@@ -28,8 +38,11 @@ class ChessEngine{
       }
     }
     this.turn = active==='w'?'w':'b';
-    this.castling={K:false,Q:false,k:false,q:false};
-    if (castling && castling!=='-') for (const c of castling) if (this.castling.hasOwnProperty(c)) this.castling[c]=true;
+    this.castling={K:true,Q:true,k:true,q:true};
+    if (castling && castling!=='-'){
+      this.castling={K:false,Q:false,k:false,q:false};
+      for(const c of castling) if (this.castling.hasOwnProperty(c)) this.castling[c]=true;
+    }
     this.ep = ep !== '-' ? ep : null;
     this.halfmove = half?parseInt(half,10):0;
     this.fullmove = full?parseInt(full,10):1;
@@ -53,6 +66,7 @@ class ChessEngine{
   pieceAt(sq){ const {file,rank}=this.coords(sq); return this.board[rank][file]; }
   kingSquare(color){ const t=color==='w'?'K':'k'; for(let r=0;r<8;r++) for(let f=0;f<8;f++) if(this.board[r][f]===t) return toSq(f,r); return null; }
 
+  // Move generation
   generateMoves(forColor=this.turn){
     const moves=[];
     for(let r=0;r<8;r++) for(let f=0;f<8;f++){
@@ -314,37 +328,40 @@ class ChessEngine{
 }
 
 /* ===== UI ===== */
-const state={ engine:new ChessEngine(START_FEN), selected:null, legalForSelected:[], orientation:'black', animating:false };
+const state={ engine:new ChessEngine(START_FEN), selected:null, legalForSelected:[], orientation:'black', drag:{active:false, from:null, ghost:null, legal:[], hover:null, startX:0, startY:0, threshold:6} };
+
 const board=document.getElementById('board'); const statusEl=document.getElementById('status');
-const modeSel=document.getElementById('modeSelect'); const orientSel=document.getElementById('orientSelect'); const resetBtn=document.getElementById('resetBtn');
+const modeSel=document.getElementById('modeSelect'); const resetBtn=document.getElementById('resetBtn');
 const promoBackdrop=document.getElementById('promoBackdrop'); const fenBtn=document.getElementById('fenBtn'); const toast=document.getElementById('toast');
 const filesAxis=document.getElementById('filesAxis'); const ranksAxis=document.getElementById('ranksAxis');
 
-function showToast(msg){ toast.textContent=msg; toast.classList.remove('hidden'); setTimeout(()=>toast.classList.add('hidden'), 2200); }
+// Hide FEN on mobile (fallback in case CSS didn't apply)
+(function mobileHide(){
+  const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  const small = window.matchMedia && window.matchMedia('(max-width: 820px)').matches;
+  const ua = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  if ((coarse||small||ua) && fenBtn) fenBtn.style.display='none';
+})();
 
 function buildBoard(){
   board.innerHTML='';
-  const ranks=state.orientation==='white'?[8,7,6,5,4,3,2,1]:[1,2,3,4,5,6,7,8];
-  const files=state.orientation==='white'?['a','b','c','d','e','f','g','h']:['h','g','f','e','d','c','b','a'];
+  const ranks=[1,2,3,4,5,6,7,8]; // white at top (rank 8 at top visually due to indices below)
+  const files=['h','g','f','e','d','c','b','a']; // keep a1 at bottom-left when orientation white-on-top
   for(const r of ranks){
     for(const f of files){
       const sq=f+r;
-      const df=document.createElement('div');
-      const fIndex = FILES.indexOf(f);
-      const rIndex = parseInt(r,10)-1;
-      const isDark = ((fIndex + rIndex) % 2) === 0;
-      df.className='square '+(isDark?'dark':'light');
-      df.dataset.square=sq;
-      board.appendChild(df);
+      const el=document.createElement('div');
+      const fIndex=FILES.indexOf(f); const rIndex=r-1;
+      const isDark=((fIndex+rIndex)%2)===0;
+      el.className='square '+(isDark?'dark':'light');
+      el.dataset.square=sq;
+      board.appendChild(el);
     }
   }
 }
 function renderAxes(){
-  if (!filesAxis || !ranksAxis) return;
-  const files = ['a','b','c','d','e','f','g','h']; // always a..h left->right
-  const ranksTopToBottom = state.orientation==='white' ? ['8','7','6','5','4','3','2','1'] : ['1','2','3','4','5','6','7','8'];
-  filesAxis.innerHTML = files.map(x=>`<div>${x}</div>`).join('');
-  ranksAxis.innerHTML = ranksTopToBottom.map(x=>`<div>${x}</div>`).join('');
+  filesAxis.innerHTML=['a','b','c','d','e','f','g','h'].map(x=>`<div>${x}</div>`).join('');
+  ranksAxis.innerHTML=['1','2','3','4','5','6','7','8'].map(x=>`<div>${x}</div>`).join('');
 }
 function squareEl(sq){ return board.querySelector('[data-square="'+sq+'"]'); }
 function clearHighlights(){ for(const d of board.children) d.classList.remove('highlight-origin','highlight-move','highlight-capture','highlight-check','highlight-attacker'); }
@@ -379,210 +396,7 @@ function updateStatus(){
   statusEl.textContent=status;
 }
 
-/* ---- Move animation ---- */
-function squareCenter(sq){
-  const el=squareEl(sq); if(!el) return {x:0,y:0};
-  const r=el.getBoundingClientRect();
-  return { x: r.left + r.width/2, y: r.top + r.height/2 };
-}
-function animateMoveVisual(from, to, pieceChar, color){
-  return new Promise(resolve=>{
-    const fromEl=squareEl(from), toEl=squareEl(to);
-    // Dim destination piece (capture)
-    if(toEl && toEl.querySelector('.piece')) toEl.classList.add('dest-dim');
-    // Hide origin piece during animation to avoid double
-    const fromPieceEl=fromEl && fromEl.querySelector('.piece'); if(fromPieceEl) fromPieceEl.style.visibility='hidden';
-
-    const ghost=document.createElement('div');
-    ghost.className='piece move-ghost ' + (color==='w'?'white':'black');
-    ghost.textContent=PIECE_UNICODE[pieceChar];
-    document.body.appendChild(ghost);
-
-    const a=squareCenter(from), b=squareCenter(to);
-    ghost.style.left=a.x+'px'; ghost.style.top=a.y+'px';
-    // initial
-    ghost.style.transform=`translate(-50%, -50%)`;
-    requestAnimationFrame(()=>{
-      ghost.style.transform=`translate(-50%, -50%) translate(${b.x-a.x}px, ${b.y-a.y}px)`;
-    });
-
-    const onEnd=()=>{
-      ghost.removeEventListener('transitionend', onEnd);
-      ghost.remove();
-      if(toEl) toEl.classList.remove('dest-dim');
-      if(fromPieceEl) fromPieceEl.style.visibility='';
-      resolve();
-    };
-    ghost.addEventListener('transitionend', onEnd);
-  });
-}
-
-/* ---- Input: click + drag coexist ---- */
-const dragState={ active:false, started:false, from:null, legal:[], ghost:null, hover:null, startX:0, startY:0, suppressClick:false };
-const DRAG_THRESHOLD=6;
-
-function canUserMovePiece(piece){
-  if (!piece) return false;
-  const myTurn = isWhite(piece) ? 'w' : 'b';
-  if (state.engine.turn !== myTurn) return false;
-  if (modeSel.value==='ai' && state.engine.turn==='b') return false; // user is White vs AI
-  if (state.animating) return false;
-  return true;
-}
-function startPointer(sq, piece, x, y){
-  dragState.active=true; dragState.started=false; dragState.from=sq; dragState.legal=state.engine.legalMovesFromSquare(sq);
-  dragState.startX=x; dragState.startY=y; dragState.suppressClick=false;
-  const fromDiv=squareEl(sq); if(fromDiv){ fromDiv.classList.add('drag-origin'); highlightMoves(sq, dragState.legal); }
-}
-function beginDrag(piece, x, y){
-  dragState.started=true; dragState.suppressClick=true;
-  const ghost=document.createElement('div');
-  ghost.className='piece drag-ghost '+(isWhite(piece)?'white':'black');
-  ghost.textContent=PIECE_UNICODE[piece];
-  document.body.appendChild(ghost);
-  ghost.style.left=x+'px'; ghost.style.top=y+'px';
-  dragState.ghost=ghost;
-}
-function updatePointer(x,y){
-  if(!dragState.active) return;
-  const dx=x-dragState.startX, dy=y-dragState.startY;
-  if(!dragState.started && Math.hypot(dx,dy) >= DRAG_THRESHOLD){
-    const piece=state.engine.pieceAt(dragState.from);
-    beginDrag(piece, x, y);
-  }
-  if(dragState.started && dragState.ghost){
-    dragState.ghost.style.left=x+'px'; dragState.ghost.style.top=y+'px';
-    const el=document.elementFromPoint(x,y);
-    const sqEl=el && el.closest ? el.closest('.square') : null;
-    const old=dragState.hover; if(old && old!==sqEl) old.classList.remove('drop-hover');
-    dragState.hover=sqEl;
-    if(sqEl){
-      const sq=sqEl.dataset.square;
-      if(dragState.legal.some(m=>m.to===sq)) sqEl.classList.add('drop-hover');
-    }
-  }
-}
-function endPointer(x,y){
-  if(!dragState.active) return;
-  const fromDiv=squareEl(dragState.from); if(fromDiv) fromDiv.classList.remove('drag-origin');
-  const wasDrag=dragState.started;
-  if(dragState.hover) dragState.hover.classList.remove('drop-hover');
-  if(dragState.ghost){ dragState.ghost.remove(); }
-  dragState.active=false;
-
-  if(!wasDrag){
-    // Treat as click-to-move
-    const el=document.elementFromPoint(x,y);
-    const cell=el && el.closest ? el.closest('.square') : null;
-    if(cell){
-      onSquareClick(cell.dataset.square);
-      dragState.suppressClick=true; // prevent subsequent click handler
-    }
-    return;
-  }
-  const el=document.elementFromPoint(x,y);
-  const sqEl=el && el.closest ? el.closest('.square') : null;
-  const targetSq=sqEl ? sqEl.dataset.square : null;
-  const mv=targetSq ? dragState.legal.find(m=>m.to===targetSq) : null;
-  dragState.from=null; dragState.legal=[]; dragState.hover=null; dragState.ghost=null;
-  if(mv){ tryMakeMove(mv); } else { clearHighlights(); highlightAttackers(); }
-}
-
-/* click handler (coexists with drag) */
-board.addEventListener('click', (e)=>{
-  if(dragState.suppressClick){ dragState.suppressClick=false; return; }
-  if (modeSel.value==='ai' && state.engine.turn==='b') return;
-  if (state.animating) return;
-  const cell=e.target.closest('.square'); if (!cell) return; onSquareClick(cell.dataset.square);
-});
-
-/* pointer events */
-board.addEventListener('pointerdown', (e)=>{
-  if (modeSel.value==='ai' && state.engine.turn==='b') return;
-  if (state.animating) return;
-  const cell=e.target.closest('.square'); if (!cell) return;
-  const sq=cell.dataset.square; const p=state.engine.pieceAt(sq);
-  if(!p || !canUserMovePiece(p)) return;
-  startPointer(sq, p, e.clientX, e.clientY);
-  board.setPointerCapture(e.pointerId);
-});
-board.addEventListener('pointermove', (e)=>{ updatePointer(e.clientX, e.clientY); });
-board.addEventListener('pointerup', (e)=>{ endPointer(e.clientX, e.clientY); try{ board.releasePointerCapture(e.pointerId);}catch(_){}});
-board.addEventListener('pointercancel', (e)=>{ endPointer(e.clientX, e.clientY); try{ board.releasePointerCapture(e.pointerId);}catch(_){}});
-
-function onSquareClick(sq){
-  const piece = state.engine.pieceAt(sq);
-  if (!piece){
-    if (state.selected){
-      const mv=state.legalForSelected.find(m=>m.to===sq);
-      if (mv) tryMakeMove(mv);
-    }
-    return;
-  }
-  if (modeSel.value==='ai' && state.engine.turn==='b') return;
-  const color = isWhite(piece)?'w':'b';
-  if (state.engine.turn!==color){
-    if (state.selected){
-      const mv=state.legalForSelected.find(m=>m.to===sq);
-      if (mv) tryMakeMove(mv);
-    }
-    return;
-  }
-  if (state.selected===sq){
-    state.selected=null; state.legalForSelected=[]; clearHighlights(); highlightAttackers(); return;
-  }
-  state.selected=sq; const moves=state.engine.legalMovesFromSquare(sq); state.legalForSelected=moves; highlightMoves(sq,moves);
-}
-
-async function doAnimatedCommit(mv, promotionCode){
-  const e=state.engine;
-  const piece=e.pieceAt(mv.from);
-  const color=isWhite(piece)?'w':'b';
-  state.animating=true;
-  await animateMoveVisual(mv.from, mv.to, piece, color);
-  e.makeMove(promotionCode ? {...mv, promotion: promotionCode} : mv);
-  state.animating=false;
-  renderPieces(); updateStatus();
-}
-
-function tryMakeMove(mv){
-  const e=state.engine; const fromP=e.pieceAt(mv.from); const toRank=parseInt(mv.to[1],10);
-  const needsPromo = fromP && fromP.toLowerCase()==='p' && (toRank===8||toRank===1) && !mv.promotion;
-  if (needsPromo){
-    openPromotion().then(code=>{ doAnimatedCommit(mv, code||'q').then(()=>{ afterMovePost(); }); });
-  } else {
-    doAnimatedCommit(mv, null).then(()=>{ afterMovePost(); });
-  }
-}
-function afterMovePost(){
-  state.selected=null; state.legalForSelected=[]; clearHighlights(); highlightAttackers();
-  if (modeSel.value==='ai') scheduleAI();
-}
-
-/* AI */
-function aiChooseMove(){
-  const e=state.engine; const moves=e.legalMoves(); if(!moves.length) return null;
-  return moves[Math.floor(Math.random()*moves.length)];
-}
-function aiMove(){
-  const mv=aiChooseMove(); if(!mv) return;
-  const e=state.engine;
-  const piece=e.pieceAt(mv.from);
-  const color=isWhite(piece)?'w':'b';
-  state.animating=true;
-  animateMoveVisual(mv.from, mv.to, piece, color).then(()=>{
-    e.makeMove(mv);
-    state.animating=false;
-    renderPieces(); updateStatus();
-  });
-}
-function scheduleAI(){
-  if (state.engine.turn!=='b') return;
-  if (state.engine.inCheckmate()||state.engine.inStalemate()||state.engine.isThreefold()||state.engine.isDrawBy50Move()||state.engine.insufficientMaterial()) return;
-  setTimeout(aiMove, 200); // small think-time
-}
-
-/* Promotion */
+// Promotion
 function openPromotion(){
   const backdrop=document.getElementById('promoBackdrop'); backdrop.classList.remove('hidden');
   return new Promise(resolve=>{
@@ -592,11 +406,182 @@ function openPromotion(){
   });
 }
 
-function renderAxesAndBoard(){ buildBoard(); renderPieces(); renderAxes(); }
-function resetGame(){ state.engine.reset(); state.selected=null; state.legalForSelected=[]; clearHighlights(); renderAxesAndBoard(); updateStatus(); if (modeSel.value==='ai') scheduleAI(); }
-modeSel.addEventListener('change', ()=>{ resetGame(); });
-orientSel && orientSel.addEventListener('change', ()=>{ state.orientation=orientSel.value==='black'?'black':'white'; renderAxesAndBoard(); });
-resetBtn.addEventListener('click', resetGame);
-fenBtn.addEventListener('click', ()=>{ const fen=state.engine.toFEN(); navigator.clipboard.writeText(fen).then(()=>showToast('FEN copied to clipboard')); });
+// Animation (center-to-center ghost)
+function centerOfSquare(sq){
+  const el=squareEl(sq); const r=el.getBoundingClientRect();
+  return {x:r.left + r.width/2, y:r.top + r.height/2};
+}
+function animateMoveGhost(from,to,pieceChar, colorClass){
+  return new Promise(resolve=>{
+    const start=centerOfSquare(from), end=centerOfSquare(to);
+    const ghost=document.createElement('div');
+    ghost.className='piece drag-ghost '+colorClass;
+    ghost.textContent=PIECE_UNICODE[pieceChar];
+    ghost.style.left=start.x+'px';
+    ghost.style.top=start.y+'px';
+    document.body.appendChild(ghost);
 
-(function init(){ renderAxesAndBoard(); updateStatus(); if (modeSel.value==='ai') scheduleAI(); })();
+    // hide real pieces during animation to avoid snap/flicker
+    const fromEl=squareEl(from); const toEl=squareEl(to);
+    const fromPiece=fromEl && fromEl.querySelector('.piece'); if(fromPiece) fromPiece.style.visibility='hidden';
+    const toPiece=toEl && toEl.querySelector('.piece'); if(toPiece) toPiece.style.visibility='hidden';
+
+    requestAnimationFrame(()=>{
+      ghost.style.transition=`left var(--anim-dur) var(--anim-ease), top var(--anim-dur) var(--anim-ease)`;
+      ghost.style.left=end.x+'px';
+      ghost.style.top=end.y+'px';
+      setTimeout(()=>{
+        ghost.remove();
+        if(fromPiece) fromPiece.style.visibility='';
+        if(toPiece) toPiece.style.visibility='';
+        resolve();
+      }, 240); // a hair > 225ms to ensure finish
+    });
+  });
+}
+
+// Click + Drag handlers
+function canUserMovePiece(piece){
+  if (!piece) return false;
+  const myTurn = isWhite(piece) ? 'w' : 'b';
+  if (state.engine.turn !== myTurn) return false;
+  if (modeSel.value==='ai' && state.engine.turn==='b') return false; // user plays White vs AI
+  return true;
+}
+
+function onSquareClick(sq){
+  const piece = state.engine.pieceAt(sq);
+  if (!piece){
+    if (state.selected){
+      const mv=state.legalForSelected.find(m=>m.to===sq);
+      if (mv) tryMakeMoveAnimated(mv);
+    }
+    return;
+  }
+  if (modeSel.value==='ai' && state.engine.turn==='b') return;
+  const color = isWhite(piece)?'w':'b';
+  if (state.engine.turn!==color){
+    if (state.selected){
+      const mv=state.legalForSelected.find(m=>m.to===sq);
+      if (mv) tryMakeMoveAnimated(mv);
+    }
+    return;
+  }
+  if (state.selected===sq){ state.selected=null; state.legalForSelected=[]; clearHighlights(); highlightAttackers(); return; }
+  state.selected=sq; const moves=state.engine.legalMovesFromSquare(sq); state.legalForSelected=moves; highlightMoves(sq,moves);
+}
+
+board.addEventListener('click', (e)=>{
+  if (modeSel.value==='ai' && state.engine.turn==='b') return;
+  const cell=e.target.closest('.square'); if (!cell) return; onSquareClick(cell.dataset.square);
+});
+
+board.addEventListener('pointerdown', (e)=>{
+  if (modeSel.value==='ai' && state.engine.turn==='b') return;
+  const cell=e.target.closest('.square'); if (!cell) return;
+  const sq=cell.dataset.square; const p=state.engine.pieceAt(sq);
+  if(!p || !canUserMovePiece(p)) return;
+  state.drag.active=true; state.drag.from=sq; state.drag.startX=e.clientX; state.drag.startY=e.clientY;
+  state.drag.legal=state.engine.legalMovesFromSquare(sq);
+  highlightMoves(sq, state.drag.legal);
+  // don't create ghost until threshold crossed; but give origin shading immediately
+  const fromDiv=squareEl(sq); if(fromDiv) fromDiv.classList.add('drag-origin');
+  board.setPointerCapture(e.pointerId);
+});
+
+board.addEventListener('pointermove', (e)=>{
+  if(!state.drag.active) return;
+  const moved=Math.hypot(e.clientX-state.drag.startX, e.clientY-state.drag.startY);
+  if(!state.drag.ghost && moved>state.drag.threshold){
+    const p=state.engine.pieceAt(state.drag.from);
+    const ghost=document.createElement('div');
+    ghost.className='piece drag-ghost '+(isWhite(p)?'white':'black');
+    ghost.textContent=PIECE_UNICODE[p];
+    ghost.style.left=e.clientX+'px'; ghost.style.top=e.clientY+'px';
+    document.body.appendChild(ghost);
+    state.drag.ghost=ghost;
+  }
+  if(state.drag.ghost){ state.drag.ghost.style.left=e.clientX+'px'; state.drag.ghost.style.top=e.clientY+'px'; }
+  const el=document.elementFromPoint(e.clientX, e.clientY);
+  const sqEl=el && el.closest ? el.closest('.square') : null;
+  if(state.drag.hover && (!sqEl || sqEl!==state.drag.hover)) state.drag.hover.classList.remove('drop-hover');
+  if(sqEl){
+    const sq=sqEl.dataset.square;
+    if(state.drag.legal.some(m=>m.to===sq)) sqEl.classList.add('drop-hover');
+    state.drag.hover=sqEl;
+  }else state.drag.hover=null;
+});
+
+function clearDragVisuals(){
+  const fromDiv=squareEl(state.drag.from); if(fromDiv) fromDiv.classList.remove('drag-origin');
+  if(state.drag.hover) state.drag.hover.classList.remove('drop-hover');
+  if(state.drag.ghost) state.drag.ghost.remove();
+}
+
+board.addEventListener('pointerup', (e)=>{
+  if(!state.drag.active) return;
+  const el=document.elementFromPoint(e.clientX, e.clientY);
+  const sqEl=el && el.closest ? el.closest('.square') : null;
+  const targetSq=sqEl ? sqEl.dataset.square : null;
+  const mv = targetSq ? state.drag.legal.find(m=>m.to===targetSq) : null;
+  clearDragVisuals();
+  state.drag={active:false, from:null, ghost:null, legal:[], hover:null, startX:0,startY:0,threshold:6};
+  try{ board.releasePointerCapture(e.pointerId); }catch(_){}
+  if(mv) tryMakeMoveAnimated(mv); else { clearHighlights(); highlightAttackers(); }
+});
+board.addEventListener('pointercancel', (e)=>{
+  if(!state.drag.active) return;
+  clearDragVisuals();
+  state.drag={active:false, from:null, ghost:null, legal:[], hover:null, startX:0,startY:0,threshold:6};
+  try{ board.releasePointerCapture(e.pointerId); }catch(_){}
+});
+
+async function tryMakeMoveAnimated(mv){
+  const e=state.engine; const fromP=e.pieceAt(mv.from); const toRank=parseInt(mv.to[1],10);
+  const needsPromo = fromP && fromP.toLowerCase()==='p' && (toRank===8||toRank===1) && !mv.promotion;
+  if (needsPromo){
+    const code = await openPromotion();
+    // animate then make move
+    await animateMoveGhost(mv.from, mv.to, fromP, isWhite(fromP)?'white':'black');
+    e.makeMove({...mv, promotion:code||'q'});
+  }else{
+    await animateMoveGhost(mv.from, mv.to, fromP, isWhite(fromP)?'white':'black');
+    e.makeMove(mv);
+  }
+  afterMove();
+}
+
+function afterMove(){
+  state.selected=null; state.legalForSelected=[]; clearHighlights(); renderPieces(); updateStatus();
+  if (modeSel.value==='ai') scheduleAI();
+}
+
+// AI
+function randomAI(e){ const moves=e.legalMoves(); if(!moves.length) return null; return moves[Math.floor(Math.random()*moves.length)]; }
+function scheduleAI(){
+  const e=state.engine;
+  if (e.turn!=='b') return;
+  if (e.inCheckmate()||e.inStalemate()||e.isThreefold()||e.isDrawBy50Move()||e.insufficientMaterial()) return;
+  setTimeout(async ()=>{
+    const mv=randomAI(e); if(!mv) return;
+    // animate AI move too
+    const p=e.pieceAt(mv.from);
+    await animateMoveGhost(mv.from, mv.to, p, isWhite(p)?'white':'black');
+    e.makeMove(mv);
+    afterMove();
+  }, 250);
+}
+
+// Axes and rendering
+function renderAxesAndBoard(){ buildBoard(); renderPieces(); renderAxes(); }
+
+function resetGame(){ state.engine.reset(); state.selected=null; state.legalForSelected=[]; clearHighlights(); renderAxesAndBoard(); updateStatus(); if (modeSel.value==='ai') scheduleAI(); }
+modeSel.addEventListener('change', resetGame);
+resetBtn.addEventListener('click', resetGame);
+
+document.getElementById('fenBtn').addEventListener('click', ()=>{
+  const fen=state.engine.toFEN(); navigator.clipboard.writeText(fen).then(()=>showToast('FEN copied to clipboard'));
+});
+
+// Init
+(function init(){ try{ renderAxesAndBoard(); updateStatus(); if (modeSel.value==='ai') scheduleAI(); }catch(err){ console.error(err); statusEl.textContent='Error: '+err.message; } })();
