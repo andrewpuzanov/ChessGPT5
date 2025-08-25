@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Classic Chess v24j</title>
+  <title>Classic Chess v24j-patch4</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="app">
-    <h1>Classic Chess <span class="ver">v24j</span></h1>
+    <h1>Classic Chess <span class="ver">v24j‑patch4</span></h1>
     <div class="topbar">
       <div id="status" class="status">Loading…</div>
       <div class="controls">
@@ -22,16 +22,13 @@
         <button id="fenBtn" type="button">Copy FEN</button>
       </div>
     </div>
-
     <div class="board-wrap">
-      <div id="board" class="board" aria-label="Chess board" role="grid"></div>
+      <div id="board" class="board"></div>
       <div id="filesAxis" class="files-axis"></div>
       <div id="ranksAxis" class="ranks-axis"></div>
     </div>
-
-    <div class="legend">Tip: click a piece to see moves. Click again to deselect.</div>
+    <div class="legend">Tip: click a piece to select, then click a highlighted square, or drag a piece.</div>
   </div>
-
   <div id="promoBackdrop" class="promo-backdrop hidden">
     <div class="promo-dialog">
       <div class="promo-title">Promote to:</div>
@@ -43,9 +40,7 @@
       </div>
     </div>
   </div>
-
   <div id="toast" class="toast hidden"></div>
-
   <script src="script.js"></script>
 </body>
 </html>
