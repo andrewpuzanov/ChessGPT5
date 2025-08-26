@@ -1,11 +1,16 @@
 :root { --board-size: clamp(340px, 64vmin, 560px); --square: calc(var(--board-size) / 8); --anim-dur: 225ms; }
 * { box-sizing: border-box; } body { margin: 0; padding: 20px; background: #0f172a; color: #e5e7eb; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-h1 { margin: 0 0 12px; font-size: 24px; font-weight: 800; } .ver { font-weight: 700; color: #94a3b8; font-size: 14px; margin-left: 6px; }
-.app { max-width: calc(var(--board-size) + 60px); margin: 0 auto; } .topbar { display: grid; gap: 10px; margin-bottom: 12px; }
-.status { padding: 10px 12px; background:#111827; border:1px solid #1f2937; border-radius:10px; font-weight:600; min-height: 42px; display:flex; align-items:center; }
+/* Align title left edge with status/board */
+h1 { width: var(--board-size); margin: 0 auto 12px; font-size: 24px; font-weight: 800; }
+.ver { font-weight: 700; color: #94a3b8; font-size: 14px; margin-left: 6px; }
+.app { max-width: calc(var(--board-size) + 60px); margin: 0 auto; }
+/* Align the block with status + controls to board left edge */
+.topbar { width: var(--board-size); margin: 0 auto 12px; display: grid; gap: 10px; }
+/* Status width aligned to board */
+.status { width: 100%; margin: 0; padding: 10px 12px; background:#111827; border:1px solid #1f2937; border-radius:10px; font-weight:600; min-height: 42px; display:flex; align-items:center; }
 .controls { display:flex; gap: 10px; align-items:center; flex-wrap: wrap; } button, select, label { font-size: 14px; }
-button { padding: 8px 12px; border-radius:8px; border:1px solid #374151; background:#1f2937; color:#e5e7eb; cursor:pointer; } button:hover { background:#111827; }
-select { padding: 6px 8px; border-radius:8px; border:1px solid #374151; background:#111827; color:#e5e7eb; }
+button { padding: 8px 12px; border-radius:8px; border:1px solid var(--ctrl-border); background: var(--ctrl-bg); color: var(--ctrl-text); cursor:pointer; } button:hover { background: var(--ctrl-hover); }
+select { padding: 6px 8px; border-radius:8px; border:1px solid var(--ctrl-border); background: var(--ctrl-bg); color: var(--ctrl-text); }
 
 .board-wrap{ position: relative; width: var(--board-size); margin: 0 auto; padding-bottom: 40px; }
 .board{ width: var(--board-size); aspect-ratio: 1 / 1; border-radius: 10px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,.35);
@@ -37,11 +42,122 @@ select { padding: 6px 8px; border-radius:8px; border:1px solid #374151; backgrou
 .files-axis { position: absolute; top: calc(100% - 30px); left: 0; width: 100%; display: grid; grid-template-columns: repeat(8, 1fr); font-size: 12px; color: #9ca3af; text-align: center; pointer-events: none; }
 .ranks-axis { position: absolute; left: calc(-32px); top: 0; height: var(--board-size); width: 28px; display: grid; grid-template-rows: repeat(8, 1fr); font-size: 12px; color: #9ca3af; place-items: center; pointer-events: none; }
 
-.legend { margin-top: 1px; color:#9ca3af; font-size: 12px; }
+.bottom-bar{ width: var(--board-size); margin: 6px auto 0; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.theme-ctrl{ display:flex; align-items:center; gap:8px; }
+.theme-ctrl label{ font-size: 13px; color: var(--axis-color); }
 
 .drag-ghost{ position: fixed; z-index: 1000; pointer-events: none; transform: translate(-50%, -50%) scale(1.08); filter: drop-shadow(0 6px 10px rgba(0,0,0,.5));}
 .anim-ghost{ position: fixed; z-index: 1000; pointer-events: none; transform: translate(-50%, -50%); transition: transform var(--anim-dur) ease; will-change: transform; filter: drop-shadow(0 6px 10px rgba(0,0,0,.5));}
 
+/* === THEME VARS (updated) === */
+:root {
+  --bg: #0f172a;            /* Classic stays as-is */
+  --text: #e5e7eb;
+  --square-light: #b8c2cf;
+  --square-dark:  #3b4a68;
+  --axis-color:   #9ca3af;
+  --ctrl-bg:      #1f2937;
+  --ctrl-border:  #374151;
+  --ctrl-hover:   #111827;
+  --ctrl-text:    #e5e7eb;
+}
+:root[data-theme="classic"] {
+  --bg: #0f172a;
+  --text: #e5e7eb;
+  --square-light: #b8c2cf;
+  --square-dark:  #3b4a68;
+  --axis-color:   #9ca3af;
+  --ctrl-bg:      #1f2937;
+  --ctrl-border:  #374151;
+  --ctrl-hover:   #111827;
+  --ctrl-text:    #e5e7eb;
+}
+:root[data-theme="emerald"] {
+  --bg: #052e2b;
+  --text: #e5e7eb;
+  --square-light: #a7d8c9;
+  --square-dark:  #2f6f66;
+  --axis-color:   #c7fff2;
+  --ctrl-bg:      #1b4e48;
+  --ctrl-border:  #2a6d64;
+  --ctrl-hover:   #113835;
+  --ctrl-text:    #e5e7eb;
+}
+:root[data-theme="mono"] {
+  --bg: #111111;
+  --text: #f1f5f9;
+  --square-light: #c7c7c7;
+  --square-dark:  #505050;
+  --axis-color:   #a1a1aa;
+  --ctrl-bg:      #2a2a2a;
+  --ctrl-border:  #3a3a3a;
+  --ctrl-hover:   #1a1a1a;
+  --ctrl-text:    #f1f5f9;
+}
+:root[data-theme="sand"] {
+  --bg: #b08968;            /* darker than dark squares */
+  --text: #000000;
+  --square-light: #f0e3c2;
+  --square-dark:  #d3b58c;
+  --axis-color: #000000;
+  --ctrl-bg:      #9a7754;
+  --ctrl-border:  #8a6a49;
+  --ctrl-hover:   #835f44;
+  --ctrl-text: #000000;
+}
+:root[data-theme="red"] {
+  --bg: #2b0606;
+  --text: #f2e8e8;
+  --square-light: #e0a3a3;
+  --square-dark:  #8b2f2f;
+  --axis-color:   #f3c5c5;
+  --ctrl-bg:      #732020;
+  --ctrl-border:  #8b2f2f;
+  --ctrl-hover:   #5a1919;
+  --ctrl-text:    #f8f9fa;
+}
+:root[data-theme="brown"] {
+  --bg: #2b1a12;
+  --text: #f2ece6;
+  --square-light: #c9a57a;
+  --square-dark:  #8b5a2b;
+  --axis-color:   #d6c4b0;
+  --ctrl-bg:      #6e4524;
+  --ctrl-border:  #8b5a2b;
+  --ctrl-hover:   #5a3a1e;
+  --ctrl-text:    #f8f9fa;
+}
+:root[data-theme="magenta"] {
+  --bg: #2a062b;
+  --text: #fbe9fb;
+  --square-light: #e0a3d8;
+  --square-dark:  #8b2f7a;
+  --axis-color:   #f6c3f0;
+  --ctrl-bg:      #6e2a65;
+  --ctrl-border:  #8b2f7a;
+  --ctrl-hover:   #571f50;
+  --ctrl-text:    #f8f9fa;
+}
+
+/* Apply theme vars */
+body { background: var(--bg); color: var(--text); }
+.square.dark { background: var(--square-dark); }
+.square.light { background: var(--square-light); }
+.files-axis, .ranks-axis { color: var(--axis-color); }
+
+
+/* Status bar themed like controls for all non-Classic themes */
+:root:not([data-theme="classic"]) .status {
+  background: var(--ctrl-bg);
+  border-color: var(--ctrl-border);
+  color: var(--ctrl-text);
+}
+/* Sand: remove board shadow only for this theme */
+:root[data-theme="sand"] .board { box-shadow: none; }
+
 @media (pointer: coarse), (max-width: 820px){
   #fenBtn { display: none !important; }
 }
+
+/* Version color equals heading color on non-Classic themes */
+:root:not([data-theme="classic"]) .ver { color: var(--text); }

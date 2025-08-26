@@ -1,4 +1,4 @@
-/* Classic Chess — v25b (visual-only promo icons) */
+/* Classic Chess — v25c baseline with theming controls (UI-only changes) */
 const FILES=['a','b','c','d','e','f','g','h'];
 const START_FEN="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -8,11 +8,11 @@ const cloneBoard=b=>b.map(r=>r.slice());
 const toSq=(f,r)=>FILES[f]+(r+1);
 
 const PIECE_UNICODE={
-  'P':'♙','N':'♘','B':'♗','R':'♖','Q':'♔','K':'♕',
+  'P':'♙','N':'♘','B':'♗','R':'♖','Q':'♔','K':'♕', // swapped shapes per your checkpoints
   'p':'♟','n':'♞','b':'♝','r':'♜','q':'♚','k':'♛'
 };
 
-/* ---------------- Engine (unchanged rules) ---------------- */
+/* ---------------- Engine ---------------- */
 class ChessEngine{
   constructor(fen=START_FEN){ this.loadFEN(fen); this.history=[]; this.positionCounts=new Map(); this.recordPosition(); }
   reset(){ this.loadFEN(START_FEN); this.history=[]; this.positionCounts=new Map(); this.recordPosition(); }
@@ -327,13 +327,28 @@ const board=document.getElementById('board'),
       fenBtn=document.getElementById('fenBtn'),
       toast=document.getElementById('toast'),
       filesAxis=document.getElementById('filesAxis'),
-      ranksAxis=document.getElementById('ranksAxis');
+      ranksAxis=document.getElementById('ranksAxis'),
+      themeSelect=document.getElementById('themeSelect');
 
 // Hide FEN on mobile
 (function(){
   const isMobile=(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches)||/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   if(isMobile&&fenBtn) fenBtn.style.display='none';
 })();
+
+// THEME handling
+(function initTheme(){
+  const saved = localStorage.getItem('theme') || 'classic';
+  document.documentElement.setAttribute('data-theme', saved);
+  if (themeSelect) themeSelect.value = saved;
+})();
+if (themeSelect){
+  themeSelect.addEventListener('change', () => {
+    const v = themeSelect.value || 'classic';
+    document.documentElement.setAttribute('data-theme', v);
+    try { localStorage.setItem('theme', v); } catch {}
+  });
+}
 
 // Hide level selector in Two Players mode
 function refreshLevelVisibility(){
@@ -547,7 +562,7 @@ function tryMakeMove(mv){
   }
 }
 
-/* ---------------- AI Levels (unchanged) ---------------- */
+/* ---------------- AI Levels ---------------- */
 const AI_LEVELS={
   0:{depth:0, time:80, quies:false, tt:false, name:'Random'},
   1:{depth:1, time:120,quies:false, tt:false, name:'Fast'},
@@ -683,7 +698,6 @@ function scheduleAI(){
 /* -------------- Promotion dialog -------------- */
 function openPromotion(){
   const backdrop=document.getElementById('promoBackdrop');
-  // Icons follow the same glyph mapping as the board (handles swapped Q/K shapes)
   const whiteTurn = state.engine.turn === 'w';
   const icons = whiteTurn
     ? { q: PIECE_UNICODE['Q'], r: PIECE_UNICODE['R'], b: PIECE_UNICODE['B'], n: PIECE_UNICODE['N'] }

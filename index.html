@@ -28,7 +28,6 @@
             <option value="4">Pro</option>
           </select>
         </label>
-        <button id="fenBtn" type="button">Copy FEN</button>
       </div>
     </div>
 
@@ -38,7 +37,21 @@
       <div id="ranksAxis" class="ranks-axis"></div>
     </div>
 
-    <div class="legend">Tip: click a piece to select, then click a highlighted square, or drag a piece.</div>
+    <div class="bottom-bar">
+      <div class="theme-ctrl">
+        <label for="themeSelect">Theme:</label>
+        <select id="themeSelect">
+          <option value="classic">Classic</option>
+          <option value="emerald">Emerald</option>
+          <option value="sand">Sand</option>
+          <option value="mono">Monochrome</option>
+          <option value="red">Red</option>
+          <option value="brown">Brown</option>
+          <option value="magenta">Magenta</option>
+        </select>
+      </div>
+      <button id="fenBtn" type="button">Copy FEN</button>
+    </div>
   </div>
 
   <!-- Promotion dialog -->
