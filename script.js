@@ -1,4 +1,4 @@
-/* Classic Chess — v25 (AI levels) */
+/* Classic Chess — v25b (visual-only promo icons) */
 const FILES=['a','b','c','d','e','f','g','h'];
 const START_FEN="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -547,7 +547,7 @@ function tryMakeMove(mv){
   }
 }
 
-/* ---------------- AI Levels ---------------- */
+/* ---------------- AI Levels (unchanged) ---------------- */
 const AI_LEVELS={
   0:{depth:0, time:80, quies:false, tt:false, name:'Random'},
   1:{depth:1, time:120,quies:false, tt:false, name:'Fast'},
@@ -563,12 +563,7 @@ function aiChooseMove(engine){
     return list[Math.floor(Math.random()*list.length)]||null;
   }
   const start=performance.now();
-  const me=engine.turn; // 'b'
   const tt=level.tt?new Map():null;
-
-  function key(depth){
-    return engine.toFEN().split(' ').slice(0,2).join(' ')+`|d${depth}`;
-  }
 
   const PIECE_VALUES={p:100,n:320,b:330,r:500,q:900,k:0};
   const PST = {
@@ -616,7 +611,6 @@ function aiChooseMove(engine){
 
   const MAX_DEPTH=level.depth;
   const TIME_LIMIT=level.time;
-  let nodes=0;
   const startTime=performance.now();
   function timeUp(){ return (performance.now()-startTime)>TIME_LIMIT; }
 
@@ -689,6 +683,16 @@ function scheduleAI(){
 /* -------------- Promotion dialog -------------- */
 function openPromotion(){
   const backdrop=document.getElementById('promoBackdrop');
+  // Icons follow the same glyph mapping as the board (handles swapped Q/K shapes)
+  const whiteTurn = state.engine.turn === 'w';
+  const icons = whiteTurn
+    ? { q: PIECE_UNICODE['Q'], r: PIECE_UNICODE['R'], b: PIECE_UNICODE['B'], n: PIECE_UNICODE['N'] }
+    : { q: PIECE_UNICODE['q'], r: PIECE_UNICODE['r'], b: PIECE_UNICODE['b'], n: PIECE_UNICODE['n'] };
+  backdrop.querySelectorAll('.promo-choices button').forEach(btn=>{
+    const code=btn.getAttribute('data-piece');
+    const span=btn.querySelector('.promo-icon');
+    if(span && icons[code]) span.textContent = icons[code];
+  });
   backdrop.classList.remove('hidden');
   return new Promise(resolve=>{
     const handler=(ev)=>{
