@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Classic Chess v25</title>
+  <title>Classic Chess v25a</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="app">
-    <h1>Classic Chess <span class="ver">v25</span></h1>
+    <h1>Classic Chess <span class="ver">v25a</span></h1>
     <div class="topbar">
       <div id="status" class="status">Loading…</div>
       <div class="controls">
-        <button id="resetBtn" type="button">Reset Game</button>
+        <button id="resetBtn" type="button">New Game</button>
         <label>Mode:
           <select id="modeSelect">
             <option value="human">Two Players</option>
@@ -21,11 +21,11 @@
         </label>
         <label id="aiLevelWrap">AI Level:
           <select id="aiLevel">
-            <option value="0">0 — Random</option>
-            <option value="1" selected>1 — Fast</option>
-            <option value="2">2 — Stronger</option>
-            <option value="3">3 — Tactics</option>
-            <option value="4">4 — Thinks more</option>
+            <option value="0">Beginner</option>
+            <option value="1" selected>Rookie</option>
+            <option value="2">Amateur</option>
+            <option value="3">Advanced</option>
+            <option value="4">Pro</option>
           </select>
         </label>
         <button id="fenBtn" type="button">Copy FEN</button>

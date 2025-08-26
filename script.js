@@ -315,7 +315,6 @@ const state={
   legalForSelected:[],
   drag:{tracking:false,started:false,from:null,ghost:null,legal:[],startX:0,startY:0},
   aiTimer:null,
-  aiWorker:null
 };
 
 const board=document.getElementById('board'),
