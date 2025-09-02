@@ -156,5 +156,5 @@ body { background: var(--bg); color: var(--text); }
 /* Mobile: hide FEN; add side margins ONLY on width (desktop unaffected) */
 @media (max-width: 820px){
   #fenBtn { display: none !important; }
-  .app {  }
+  .app { padding-left: 6px; padding-right: 6px; }
 }
