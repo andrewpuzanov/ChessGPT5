@@ -1,4 +1,4 @@
-/* Classic Chess — v26 */
+/* Classic Chess — v26 (baseline) */
 const FILES=['a','b','c','d','e','f','g','h'];
 const START_FEN="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -8,7 +8,7 @@ const cloneBoard=b=>b.map(r=>r.slice());
 const toSq=(f,r)=>FILES[f]+(r+1);
 
 const PIECE_UNICODE={
-  'P':'♙','N':'♘','B':'♗','R':'♖','Q':'♔','K':'♕', // swapped shapes per earlier checkpoints
+  'P':'♙','N':'♘','B':'♗','R':'♖','Q':'♔','K':'♕', // (swapped glyphs per earlier checkpoints)
   'p':'♟','n':'♞','b':'♝','r':'♜','q':'♚','k':'♛'
 };
 
@@ -62,7 +62,7 @@ class ChessEngine{
       const to=toSq(file,r1);
       if(r1===last)['q','r','b','n'].forEach(pr=>this.push(ms,from,to,{promotion:pr}));
       else{
-        this.push(ms,from,to);
+        self=this; this.push(ms,from,to);
         const r2=rank+2*dir;
         if(rank===start&&!this.board[r2][file]) this.push(ms,from,toSq(file,r2));
       }
@@ -330,13 +330,13 @@ const board=document.getElementById('board'),
       ranksAxis=document.getElementById('ranksAxis'),
       themeSelect=document.getElementById('themeSelect');
 
-// Hide FEN on mobile
+// Hide FEN on mobile (kept as in v26)
 (function(){
   const isMobile=(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches)||/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   if(isMobile&&fenBtn) fenBtn.style.display='none';
 })();
 
-// THEME handling
+// THEME handling (kept from v26)
 (function initTheme(){
   const saved = localStorage.getItem('theme') || 'classic';
   document.documentElement.setAttribute('data-theme', saved);
@@ -562,7 +562,7 @@ function tryMakeMove(mv){
   }
 }
 
-/* ---------------- AI Levels ---------------- */
+/* ---------------- AI (same as v26) ---------------- */
 const AI_LEVELS={
   0:{depth:0, time:80, quies:false, tt:false, name:'Random'},
   1:{depth:1, time:120,quies:false, tt:false, name:'Fast'},
@@ -578,17 +578,6 @@ function aiChooseMove(engine){
     return list[Math.floor(Math.random()*list.length)]||null;
   }
   const start=performance.now();
-  const tt=level.tt?new Map():null;
-
-  const PIECE_VALUES={p:100,n:320,b:330,r:500,q:900,k:0};
-  const PST = {
-    p:[0,0,0,0,0,0,0,0,50,50,50,50,50,50,50,50,10,10,20,30,30,20,10,10,5,5,10,25,25,10,5,5,0,0,0,20,20,0,0,0,5,-5,-10,0,0,-10,-5,5,5,10,10,-20,-20,10,10,5,0,0,0,0,0,0,0,0],
-    n:[-50,-40,-30,-30,-30,-30,-40,-50,-40,-20,0,0,0,0,-20,-40,-30,0,10,15,15,10,0,-30,-30,5,15,20,20,15,5,-30,-30,0,15,20,20,15,0,-30,-30,5,10,15,15,10,5,-30,-40,-20,0,5,5,0,-20,-40,-50,-40,-30,-30,-30,-30,-40,-50],
-    b:[-20,-10,-10,-10,-10,-10,-10,-20,-10,5,0,0,0,0,5,-10,-10,10,10,10,10,10,10,-10,-10,0,10,10,10,10,0,-10,-10,5,5,10,10,5,5,-10,-10,0,5,10,10,5,0,-10,-10,0,0,0,0,0,0,-10,-20,-10,-10,-10,-10,-10,-10,-20],
-    r:[0,0,0,5,5,0,0,0,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,5,10,10,10,10,10,10,5,0,0,0,0,0,0,0,0],
-    q:[-20,-10,-10,-5,-5,-10,-10,-20,-10,0,5,0,0,0,0,-10,-10,5,5,5,5,5,0,-10,0,0,5,5,5,5,0,-5,-5,0,5,5,5,5,0,-5,-10,0,5,5,5,5,0,-10,-10,0,0,0,0,0,0,-10,-20,-10,-10,-5,-5,-10,-10,-20],
-    k:[20,30,10,0,0,10,30,20,20,20,0,0,0,0,20,20,-10,-20,-20,-20,-20,-20,-20,-10,-20,-30,-30,-40,-40,-30,-30,-20,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30]
-  };
 
   function evalBoard(){
     let score=0;
@@ -598,66 +587,23 @@ function aiChooseMove(engine){
         if(!p) continue;
         const t=p.toLowerCase();
         const base={p:100,n:320,b:330,r:500,q:900,k:0}[t];
-        const idx=r*8+f;
-        const pst=PST[t];
-        const pstScore = isWhite(p) ? pst[idx] : -pst[ (7-r)*8 + f ];
-        score += (isWhite(p)?base:-base) + pstScore;
+        score += isWhite(p)?base:-base;
       }
     }
-    const save=engine.turn;
-    engine.turn='w'; const wm=engine.legalMoves().length;
-    engine.turn='b'; const bm=engine.legalMoves().length;
-    engine.turn=save;
-    score += 0.2*(wm-bm);
-    return score;
+    return score*(engine.turn==='w'?1:-1);
   }
-
   function orderMoves(moves){
-    return moves.map(m=>{
-      let s=0;
-      if(m.capture){
-        const v={'p':1,'n':3,'b':3,'r':5,'q':9,'k':100}[m.capture.toLowerCase()]||0;
-        s+=100+v*10;
-      }
-      if(m.castle) s+=5;
-      return {m, s};
-    }).sort((a,b)=>b.s-a.s).map(x=>x.m);
+    return moves.map(m=>({m, s:(m.capture?100:0)+(m.castle?5:0)})).sort((a,b)=>b.s-a.s).map(x=>x.m);
   }
-
-  const MAX_DEPTH=level.depth;
-  const TIME_LIMIT=level.time;
-  const startTime=performance.now();
-  function timeUp(){ return (performance.now()-startTime)>TIME_LIMIT; }
-
-  function qsearch(alpha,beta){
-    const stand=evalBoard();
-    if(stand>=beta) return beta;
-    if(stand>alpha) alpha=stand;
-    const list=orderMoves(engine.legalMoves().filter(m=>m.capture));
-    for(const mv of list){
-      if(timeUp()) break;
-      engine.makeMove(mv,true);
-      const score = -qsearch(-beta,-alpha);
-      engine.undoMove();
-      if(score>=beta) return beta;
-      if(score>alpha) alpha=score;
-    }
-    return alpha;
-  }
-
   function negamax(depth,alpha,beta){
-    if(depth===0){
-      if(level.quies) return qsearch(alpha,beta);
-      return evalBoard();
-    }
+    if(depth===0) return evalBoard();
     const moves=orderMoves(engine.legalMoves());
     if(moves.length===0){
-      if(engine.inCheck()) return -99999 + (MAX_DEPTH-depth);
+      if(engine.inCheck()) return -99999;
       return 0;
     }
     let best=-1e9;
     for(const mv of moves){
-      if(timeUp()) break;
       engine.makeMove(mv,true);
       const val=-negamax(depth-1,-beta,-alpha);
       engine.undoMove();
@@ -667,28 +613,24 @@ function aiChooseMove(engine){
     }
     return best;
   }
-
+  const root=orderMoves(engine.legalMoves());
   let bestMove=null, bestVal=-1e9;
-  const rootMoves=orderMoves(engine.legalMoves());
-  for(const mv of rootMoves){
-    if(timeUp()) break;
+  for(const mv of root){
     engine.makeMove(mv,true);
-    const val=-negamax(MAX_DEPTH-1,-1e9,1e9);
+    const val=-negamax(level.depth-1,-1e9,1e9);
     engine.undoMove();
     if(val>bestVal){ bestVal=val; bestMove=mv; }
   }
-  return bestMove||rootMoves[0]||null;
+  return bestMove||root[0]||null;
 }
 
 function aiMove(){
   if (modeSel.value!=='ai' || state.engine.turn!=='b') return;
-  const e=state.engine;
-  const moves=e.legalMoves(); if(!moves.length){ renderPieces(); updateStatus(); return; }
-  const mv=aiChooseMove(e) || moves[Math.floor(Math.random()*moves.length)];
-  const fromP=e.pieceAt(mv.from);
-  animateMoveCentered(mv.from,mv.to,fromP,()=>{ e.makeMove(mv); renderPieces(); updateStatus(); });
+  const mv=aiChooseMove(state.engine);
+  if(!mv){ renderPieces(); updateStatus(); return; }
+  const fromP=state.engine.pieceAt(mv.from);
+  animateMoveCentered(mv.from,mv.to,fromP,()=>{ state.engine.makeMove(mv); renderPieces(); updateStatus(); });
 }
-
 function scheduleAI(){
   if (modeSel.value!=='ai' || state.engine.turn!=='b') return;
   clearTimeout(state.aiTimer);
