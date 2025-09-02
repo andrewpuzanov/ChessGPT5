@@ -1,4 +1,4 @@
-/* Classic Chess — v25c baseline with theming controls (UI-only changes) */
+/* Classic Chess — v26 */
 const FILES=['a','b','c','d','e','f','g','h'];
 const START_FEN="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -8,7 +8,7 @@ const cloneBoard=b=>b.map(r=>r.slice());
 const toSq=(f,r)=>FILES[f]+(r+1);
 
 const PIECE_UNICODE={
-  'P':'♙','N':'♘','B':'♗','R':'♖','Q':'♔','K':'♕', // swapped shapes per your checkpoints
+  'P':'♙','N':'♘','B':'♗','R':'♖','Q':'♔','K':'♕', // swapped shapes per earlier checkpoints
   'p':'♟','n':'♞','b':'♝','r':'♜','q':'♚','k':'♛'
 };
 
@@ -726,7 +726,7 @@ function resetGame(){
   renderAxesAndBoard(); updateStatus(); if(modeSel.value==='ai') scheduleAI();
 }
 
-resetBtn.addEventListener('click', resetGame);
+document.getElementById('resetBtn').addEventListener('click', resetGame);
 
 (function init(){
   renderAxesAndBoard(); updateStatus();
