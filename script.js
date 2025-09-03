@@ -1,18 +1,13 @@
-/* Classic Chess — v30 (mobile right margin); functional board */
+/* Classic Chess — v32 */
 const FILES=['a','b','c','d','e','f','g','h'];
 const START_FEN="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-
+const PIECE_UNICODE={ 'P':'♙','N':'♘','B':'♗','R':'♖','Q':'♔','K':'♕', 'p':'♟','n':'♞','b':'♝','r':'♜','q':'♚','k':'♛' };
 const isWhite=p=>p===p.toUpperCase();
 const inBounds=(f,r)=>f>=0&&f<8&&r>=0&&r<8;
 const cloneBoard=b=>b.map(r=>r.slice());
 const toSq=(f,r)=>FILES[f]+(r+1);
 
-const PIECE_UNICODE={
-  'P':'♙','N':'♘','B':'♗','R':'♖','Q':'♔','K':'♕',
-  'p':'♟','n':'♞','b':'♝','r':'♜','q':'♚','k':'♛'
-};
-
-/* ---------------- Engine ---------------- */
+/* --------- Engine (same as prior stable) --------- */
 class ChessEngine{
   constructor(fen=START_FEN){ this.loadFEN(fen); this.history=[]; this.positionCounts=new Map(); this.recordPosition(); }
   reset(){ this.loadFEN(START_FEN); this.history=[]; this.positionCounts=new Map(); this.recordPosition(); }
@@ -308,15 +303,8 @@ class ChessEngine{
   }
 }
 
-/* ---------------- UI state & DOM ---------------- */
-const state={
-  engine:new ChessEngine(START_FEN),
-  selected:null,
-  legalForSelected:[],
-  drag:{tracking:false,started:false,from:null,ghost:null,legal:[],startX:0,startY:0},
-  aiTimer:null,
-};
-
+/* -------- UI state & DOM -------- */
+const state={ engine:new ChessEngine(START_FEN), selected:null, legalForSelected:[], drag:{tracking:false,started:false,from:null,ghost:null,legal:[],startX:0,startY:0}, aiTimer:null };
 const board=document.getElementById('board'),
       statusEl=document.getElementById('status'),
       modeSel=document.getElementById('modeSelect'),
@@ -343,15 +331,9 @@ if (themeSelect){
   });
 }
 
-function refreshLevelVisibility(){
-  levelWrap.style.display = (modeSel.value==='ai') ? '' : 'none';
-}
+function refreshLevelVisibility(){ levelWrap.style.display = (modeSel.value==='ai') ? '' : 'none'; }
 refreshLevelVisibility();
-modeSel.addEventListener('change', ()=>{
-  refreshLevelVisibility();
-  updateStatus();
-  if(modeSel.value==='ai') scheduleAI();
-});
+modeSel.addEventListener('change', ()=>{ refreshLevelVisibility(); updateStatus(); if(modeSel.value==='ai') scheduleAI(); });
 
 function showToast(msg){ toast.textContent=msg; toast.classList.remove('hidden'); setTimeout(()=>toast.classList.add('hidden'),2200); }
 if(fenBtn){
@@ -399,12 +381,8 @@ function renderPieces(){
   }
   highlightAttackers();
 }
-function clearHighlights(){
-  for(const d of board.children) d.classList.remove('highlight-origin','highlight-move','highlight-capture','highlight-check','highlight-attacker');
-}
-function clearCheckOnly(){
-  for(const d of board.children) d.classList.remove('highlight-check','highlight-attacker');
-}
+function clearHighlights(){ for(const d of board.children) d.classList.remove('highlight-origin','highlight-move','highlight-capture','highlight-check','highlight-attacker'); }
+function clearCheckOnly(){ for(const d of board.children) d.classList.remove('highlight-check','highlight-attacker'); }
 function highlightAttackers(){
   clearCheckOnly();
   if(state.engine.inCheck()){
@@ -415,7 +393,6 @@ function highlightAttackers(){
     }
   }
 }
-
 function highlightMoves(from,mvs){
   clearHighlights();
   const fd=squareEl(from); if(fd) fd.classList.add('highlight-origin');
@@ -426,8 +403,7 @@ function highlightMoves(from,mvs){
 }
 
 function updateStatus(){
-  const e=state.engine;
-  const moves=e.legalMoves();
+  const e=state.engine; const moves=e.legalMoves();
   if(moves.length===0){
     if(e.inCheck()){
       const winner=e.turn==='w'?'Black':'White';
@@ -435,8 +411,7 @@ function updateStatus(){
     }else{
       statusEl.textContent='Stalemate — draw';
     }
-    clearTimeout(state.aiTimer);
-    return;
+    clearTimeout(state.aiTimer); return;
   }
   const ai=modeSel.value==='ai';
   let status=ai?(e.turn==='w'?'White (You)':'Black (AI)'):(e.turn==='w'?'White':'Black');
@@ -450,7 +425,6 @@ function centerOfSquare(sq){
   const el=squareEl(sq); const r=el.getBoundingClientRect();
   return {x:r.left+r.width/2,y:r.top+r.height/2};
 }
-
 function animateMoveCentered(from,to,piece,done){
   const start=centerOfSquare(from), end=centerOfSquare(to);
   const ghost=document.createElement('div'); ghost.className='piece anim-ghost '+(isWhite(piece)?'white':'black');
@@ -487,7 +461,6 @@ function onSquareClick(sq){
   const mvs=state.engine.legalMovesFromSquare(sq);
   state.legalForSelected=mvs; highlightMoves(sq,mvs);
 }
-
 board.addEventListener('click',(e)=>{ const cell=e.target.closest('.square'); if(!cell) return; onSquareClick(cell.dataset.square); });
 
 board.addEventListener('pointerdown',(e)=>{
@@ -500,7 +473,6 @@ board.addEventListener('pointerdown',(e)=>{
   state.drag.legal=state.engine.legalMovesFromSquare(sq);
   state.drag.startX=e.clientX; state.drag.startY=e.clientY;
 });
-
 board.addEventListener('pointermove',(e)=>{
   if(!state.drag.tracking) return;
   const dx=e.clientX-state.drag.startX,dy=e.clientY-state.drag.startY;
@@ -515,7 +487,6 @@ board.addEventListener('pointermove',(e)=>{
   }
   if(state.drag.ghost){ state.drag.ghost.style.left=e.clientX+'px'; state.drag.ghost.style.top=e.clientY+'px'; }
 });
-
 function endDragLike(x,y){
   if(!state.drag.tracking) return;
   const was=state.drag.started; const ghost=state.drag.ghost; if(ghost) ghost.remove(); state.drag.ghost=null;
@@ -553,7 +524,7 @@ function tryMakeMove(mv){
   }
 }
 
-/* ---------------- AI ---------------- */
+/* -------- AI -------- */
 const AI_LEVELS={
   0:{depth:0, time:80, quies:false, tt:false, name:'Random'},
   1:{depth:1, time:120,quies:false, tt:false, name:'Fast'},
@@ -561,7 +532,6 @@ const AI_LEVELS={
   3:{depth:3, time:450,quies:true,  tt:false, name:'Tactics'},
   4:{depth:4, time:900,quies:true,  tt:true,  name:'Thinks more'}
 };
-
 function aiChooseMove(engine){
   const level=AI_LEVELS[+levelSel.value]||AI_LEVELS[1];
   if(level.depth===0){
@@ -581,9 +551,7 @@ function aiChooseMove(engine){
     }
     return score*(engine.turn==='w'?1:-1);
   }
-  function orderMoves(moves){
-    return moves.map(m=>({m, s:(m.capture?100:0)+(m.castle?5:0)})).sort((a,b)=>b.s-a.s).map(x=>x.m);
-  }
+  function orderMoves(moves){ return moves.map(m=>({m, s:(m.capture?100:0)+(m.castle?5:0)})).sort((a,b)=>b.s-a.s).map(x=>x.m); }
   function negamax(depth,alpha,beta){
     if(depth===0) return evalBoard();
     const moves=orderMoves(engine.legalMoves());
@@ -612,7 +580,6 @@ function aiChooseMove(engine){
   }
   return bestMove||root[0]||null;
 }
-
 function aiMove(){
   if (modeSel.value!=='ai' || state.engine.turn!=='b') return;
   const mv=aiChooseMove(state.engine);
@@ -620,12 +587,9 @@ function aiMove(){
   const fromP=state.engine.pieceAt(mv.from);
   animateMoveCentered(mv.from,mv.to,fromP,()=>{ state.engine.makeMove(mv); renderPieces(); updateStatus(); });
 }
-function scheduleAI(){
-  if (modeSel.value!=='ai' || state.engine.turn!=='b') return;
-  setTimeout(aiMove, 250);
-}
+function scheduleAI(){ if (modeSel.value!=='ai' || state.engine.turn!=='b') return; setTimeout(aiMove, 250); }
 
-/* -------------- Promotion dialog -------------- */
+/* Promotion UI */
 function openPromotion(){
   const backdrop=document.getElementById('promoBackdrop');
   const whiteTurn = state.engine.turn === 'w';
@@ -655,7 +619,6 @@ function resetGame(){
   state.selected=null; state.legalForSelected=[]; clearHighlights();
   renderAxesAndBoard(); updateStatus(); if(modeSel.value==='ai') scheduleAI();
 }
-
 document.getElementById('resetBtn').addEventListener('click', resetGame);
 
 (function init(){
