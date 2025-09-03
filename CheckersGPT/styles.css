@@ -172,3 +172,107 @@ body { background: var(--bg); color: var(--text); }
   border-radius: 50%; border: 3px solid #f59e0b; pointer-events: none; }
 .piece.checker.white .ring { border-color: #d97706; }
 .piece.checker.black .ring { border-color: #fbbf24; }
+
+
+/* v1.20 — CSS-only top-view ghosts (no JS changes) */
+.piece.drag-ghost, .piece.anim-ghost { 
+  font-size: 0; line-height: 0; position: fixed; z-index: 1000; pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+/* draw the disk */
+.piece.drag-ghost::after, .piece.anim-ghost::after {
+  content: ""; display: block;
+  width: calc(var(--square) * .7); height: calc(var(--square) * .7);
+  border-radius: 50%;
+  border: 2px solid rgba(0,0,0,.35);
+  box-sizing: border-box;
+}
+.piece.drag-ghost.white::after, .piece.anim-ghost.white::after { background: #e5e7eb; border-color: #cbd5e1; }
+.piece.drag-ghost.black::after, .piece.anim-ghost.black::after { background: #111827; border-color: #334155; }
+
+/* optional king ring if the class is present */
+.piece.drag-ghost.king::before, .piece.anim-ghost.king::before {
+  content: ""; position: absolute; top: 50%; left: 50%;
+  width: calc(var(--square) * .38); height: calc(var(--square) * .38);
+  transform: translate(-50%, -50%);
+  border-radius: 50%; border: 3px solid #f59e0b; box-sizing: border-box;
+}
+
+
+/* v1.21 updated checker disk styles */
+.piece.checker.white .disk {
+  background: #e5e7eb; border-color: #cbd5e1;
+  outline: 3px solid #777777; outline-offset: -4px;
+}
+.piece.checker.black .disk {
+  background: #111827; border-color: #334155;
+  outline: 3px solid #777777; outline-offset: -4px;
+}
+
+
+/* v1.22 inner gray circle for non-king checkers */
+.piece.checker.white .disk::before,
+.piece.checker.black .disk::before {
+  content: "";
+  position: absolute;
+  top: 50%; left: 50%;
+  width: calc(var(--square) * .32);
+  height: calc(var(--square) * .32);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px solid #777777;
+  box-sizing: border-box;
+}
+
+
+/* v1.23 — ghost visuals match static normal (non-king) checkers */
+/* Outer gray outline on ghost disks */
+.piece.drag-ghost::after,
+.piece.anim-ghost::after {
+  outline: 3px solid #777777;
+  outline-offset: -4px;
+}
+
+/* Inner gray circle for non-king ghosts */
+.piece.drag-ghost:not(.king)::before,
+.piece.anim-ghost:not(.king)::before {
+  content: "";
+  position: absolute;
+  top: 50%; left: 50%;
+  width: calc(var(--square) * .32);
+  height: calc(var(--square) * .32);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px solid #777777;
+  box-sizing: border-box;
+}
+
+
+/* v1.24 — Fix king ring/outline colors */
+
+/* Static KING outer circle should be yellow (overrides gray from v1.21) */
+.piece.checker.king .disk {
+  outline: 3px solid #f59e0b;
+  outline-offset: -4px;
+}
+
+/* Ghost KING outer circle should be yellow (overrides gray from v1.23) */
+.piece.drag-ghost.king::after,
+.piece.anim-ghost.king::after {
+  outline: 3px solid #f59e0b;
+}
+
+/* Ghost KING inner ring stays yellow (these exist from v1.20, keeping for clarity) */
+.piece.drag-ghost.king::before,
+.piece.anim-ghost.king::before {
+  content: "";
+  position: absolute;
+  top: 50%; left: 50%;
+  width: calc(var(--square) * .38);
+  height: calc(var(--square) * .38);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 3px solid #f59e0b;
+  box-sizing: border-box;
+}

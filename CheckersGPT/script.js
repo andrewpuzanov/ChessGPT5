@@ -351,7 +351,8 @@ function centerOfSquare(sq){
 function animateMoveCentered(from,to,piece,done){
   const start=centerOfSquare(from), end=centerOfSquare(to);
   const ghost=document.createElement('div'); ghost.className='piece anim-ghost '+(isWhite(piece)?'white':'black');
-  ghost.textContent=PIECE_UNICODE[piece];
+  if(piece==='K'||piece==='k'){ ghost.classList.add('king'); }
+ghost.textContent=PIECE_UNICODE[piece];
   ghost.style.left=start.x+'px'; ghost.style.top=start.y+'px';
   document.body.appendChild(ghost);
   const fromEl=squareEl(from), toEl=squareEl(to);
@@ -406,7 +407,8 @@ board.addEventListener('pointermove',(e)=>{
     const p=state.engine.pieceAt(state.drag.from); if(!p){ state.drag.tracking=false; return; }
     const start=centerOfSquare(state.drag.from);
     const ghost=document.createElement('div'); ghost.className='piece drag-ghost '+(isWhite(p)?'white':'black');
-    ghost.textContent=PIECE_UNICODE[p]; ghost.style.left=start.x+'px'; ghost.style.top=start.y+'px';
+    if(p==='K'||p==='k'){ ghost.classList.add('king'); }
+ghost.textContent=PIECE_UNICODE[p]; ghost.style.left=start.x+'px'; ghost.style.top=start.y+'px';
     document.body.appendChild(ghost); state.drag.ghost=ghost; state.drag.started=true;
     clearHighlights(); highlightMoves(state.drag.from,state.drag.legal);
   }
@@ -452,11 +454,7 @@ function tryMakeMove(mv){
 /* -------------- Checkers AI -------------- */
 function aiChooseMove(engine){
   // Levels: 0=random, 1=greedy 1-ply, 2=minimax (depth 4 plies)
-  const levels=[
-    {name:'Random', depth:0},
-    {name:'Greedy', depth:1},
-    {name:'Minimax', depth:4},
-  ];
+  const levels=[{depth:0},{depth:1},{depth:4}];
   const idx = levelSel ? +levelSel.value : 1;
   const level = levels[idx] || levels[1];
 
