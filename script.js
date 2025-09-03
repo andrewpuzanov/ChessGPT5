@@ -1,4 +1,4 @@
-/* Classic Chess — v28 (mobile right padding; functional board) */
+/* Classic Chess — v30 (mobile right margin); functional board */
 const FILES=['a','b','c','d','e','f','g','h'];
 const START_FEN="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 

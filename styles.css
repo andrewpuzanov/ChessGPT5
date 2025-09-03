@@ -153,11 +153,8 @@ body { background: var(--bg); color: var(--text); }
 
 :root[data-theme="sand"] .board { box-shadow: none; }
 
-/* Mobile: hide FEN button AND add right padding to whole app */
+/* Mobile: hide FEN button and add right margin to whole app */
 @media (max-width: 820px){
   #fenBtn { display: none !important; }
-  body { padding-right: calc(30px + env(safe-area-inset-right)); }
-}
-
-  .app { padding-right: 10px; }
+  .app { margin-left: auto; margin-right: calc(10px + env(safe-area-inset-right)); }
 }
