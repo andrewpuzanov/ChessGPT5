@@ -1,7 +1,7 @@
 /* Classic Chess — v32 */
 const FILES=['a','b','c','d','e','f','g','h'];
 const START_FEN="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-const PIECE_UNICODE={ 'P':'♙','N':'♘','B':'♗','R':'♖','Q':'♔','K':'♕', 'p':'♟','n':'♞','b':'♝','r':'♜','q':'♚','k':'♛' };
+const PIECE_UNICODE={ 'P':'♙','N':'♘','B':'♗','R':'♖','Q':'♕','K':'♔', 'p':'♟','n':'♞','b':'♝','r':'♜','q':'♛','k':'♚' };
 const isWhite=p=>p===p.toUpperCase();
 const inBounds=(f,r)=>f>=0&&f<8&&r>=0&&r<8;
 const cloneBoard=b=>b.map(r=>r.slice());
