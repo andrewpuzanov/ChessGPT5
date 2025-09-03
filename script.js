@@ -1,4 +1,4 @@
-/* Classic Chess — v26 (header New Game only, no mobile margins) */
+/* Classic Chess — v28 (mobile right padding; functional board) */
 const FILES=['a','b','c','d','e','f','g','h'];
 const START_FEN="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
