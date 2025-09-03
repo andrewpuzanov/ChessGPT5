@@ -1,4 +1,4 @@
-/* Classic Chess — v26 (baseline) */
+/* Classic Chess — v26 (header New Game only, no mobile margins) */
 const FILES=['a','b','c','d','e','f','g','h'];
 const START_FEN="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -8,7 +8,7 @@ const cloneBoard=b=>b.map(r=>r.slice());
 const toSq=(f,r)=>FILES[f]+(r+1);
 
 const PIECE_UNICODE={
-  'P':'♙','N':'♘','B':'♗','R':'♖','Q':'♔','K':'♕', // (swapped glyphs per earlier checkpoints)
+  'P':'♙','N':'♘','B':'♗','R':'♖','Q':'♔','K':'♕',
   'p':'♟','n':'♞','b':'♝','r':'♜','q':'♚','k':'♛'
 };
 
@@ -62,7 +62,7 @@ class ChessEngine{
       const to=toSq(file,r1);
       if(r1===last)['q','r','b','n'].forEach(pr=>this.push(ms,from,to,{promotion:pr}));
       else{
-        self=this; this.push(ms,from,to);
+        this.push(ms,from,to);
         const r2=rank+2*dir;
         if(rank===start&&!this.board[r2][file]) this.push(ms,from,toSq(file,r2));
       }
@@ -330,14 +330,7 @@ const board=document.getElementById('board'),
       ranksAxis=document.getElementById('ranksAxis'),
       themeSelect=document.getElementById('themeSelect');
 
-// Hide FEN on mobile (kept as in v26)
 (function(){
-  const isMobile=(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches)||/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-  if(isMobile&&fenBtn) fenBtn.style.display='none';
-})();
-
-// THEME handling (kept from v26)
-(function initTheme(){
   const saved = localStorage.getItem('theme') || 'classic';
   document.documentElement.setAttribute('data-theme', saved);
   if (themeSelect) themeSelect.value = saved;
@@ -350,7 +343,6 @@ if (themeSelect){
   });
 }
 
-// Hide level selector in Two Players mode
 function refreshLevelVisibility(){
   levelWrap.style.display = (modeSel.value==='ai') ? '' : 'none';
 }
@@ -374,7 +366,6 @@ if(fenBtn){
   });
 }
 
-/* -------------- Board rendering and interaction -------------- */
 function buildBoard(){
   board.innerHTML='';
   const ranks=[1,2,3,4,5,6,7,8], files=['a','b','c','d','e','f','g','h'];
@@ -562,7 +553,7 @@ function tryMakeMove(mv){
   }
 }
 
-/* ---------------- AI (same as v26) ---------------- */
+/* ---------------- AI ---------------- */
 const AI_LEVELS={
   0:{depth:0, time:80, quies:false, tt:false, name:'Random'},
   1:{depth:1, time:120,quies:false, tt:false, name:'Fast'},
@@ -577,8 +568,6 @@ function aiChooseMove(engine){
     const list=engine.legalMoves();
     return list[Math.floor(Math.random()*list.length)]||null;
   }
-  const start=performance.now();
-
   function evalBoard(){
     let score=0;
     for(let r=0;r<8;r++){
@@ -633,8 +622,7 @@ function aiMove(){
 }
 function scheduleAI(){
   if (modeSel.value!=='ai' || state.engine.turn!=='b') return;
-  clearTimeout(state.aiTimer);
-  state.aiTimer = setTimeout(aiMove, 250);
+  setTimeout(aiMove, 250);
 }
 
 /* -------------- Promotion dialog -------------- */

@@ -52,7 +52,7 @@ select { padding: 6px 8px; border-radius:8px; border:1px solid var(--ctrl-border
 .drag-ghost{ position: fixed; z-index: 1000; pointer-events: none; transform: translate(-50%, -50%) scale(1.08); filter: drop-shadow(0 6px 10px rgba(0,0,0,.5));}
 .anim-ghost{ position: fixed; z-index: 1000; pointer-events: none; transform: translate(-50%, -50%); transition: transform var(--anim-dur) ease; will-change: transform; filter: drop-shadow(0 6px 10px rgba(0,0,0,.5));}
 
-/* === THEME VARS (same as v26) === */
+/* === THEME VARS === */
 :root {
   --bg: #0f172a;            /* Classic */
   --text: #e5e7eb;
@@ -153,8 +153,7 @@ body { background: var(--bg); color: var(--text); }
 
 :root[data-theme="sand"] .board { box-shadow: none; }
 
-/* Mobile: hide FEN; add side margins ONLY on width (desktop unaffected) */
+/* Mobile: hide FEN button only (NO margins) */
 @media (max-width: 820px){
   #fenBtn { display: none !important; }
-  .app { padding-left: 6px; padding-right: 6px; }
 }
