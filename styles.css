@@ -156,4 +156,6 @@ body { background: var(--bg); color: var(--text); }
 /* Mobile: hide FEN button only (NO margins) */
 @media (max-width: 820px){
   #fenBtn { display: none !important; }
+  body { padding-right: 10px; }
+}
 }
