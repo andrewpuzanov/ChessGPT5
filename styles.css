@@ -156,5 +156,8 @@ body { background: var(--bg); color: var(--text); }
 /* Mobile: hide FEN button AND add right padding to whole app */
 @media (max-width: 820px){
   #fenBtn { display: none !important; }
+  body { padding-right: calc(30px + env(safe-area-inset-right)); }
+}
+
   .app { padding-right: 10px; }
 }
