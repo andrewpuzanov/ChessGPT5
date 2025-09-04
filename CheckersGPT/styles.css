@@ -276,3 +276,17 @@ body { background: var(--bg); color: var(--text); }
   border: 3px solid #f59e0b;
   box-sizing: border-box;
 }
+
+
+/* v1.28 — mobile-only layout tweaks to match chess */
+@media (max-width: 640px) {
+  .app {
+    padding-right: 12px;
+  }
+  .files-axis {
+    top: calc(100% - 30px);
+  }
+  .ranks-axis {
+    left: -32px;
+  }
+}
