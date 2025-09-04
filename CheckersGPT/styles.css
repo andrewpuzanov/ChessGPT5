@@ -276,3 +276,17 @@ body { background: var(--bg); color: var(--text); }
   border: 3px solid #f59e0b;
   box-sizing: border-box;
 }
+
+
+/* v1.34 — mobile-only: page padding & axis spacing tuned to chess */
+@media (max-width: 820px){
+  /* Right padding for everything on the page */
+  body { padding-right: 10px; }
+
+  /* Remove extra wrapper padding so left gap matches chess */
+  .app { padding-left: 0; padding-right: 0; }
+
+  /* Keep axis at chess distance relative to board */
+  .ranks-axis { left: -32px; }
+  .files-axis { top: calc(100% - 30px); }
+}
