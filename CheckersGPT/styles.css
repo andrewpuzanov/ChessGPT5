@@ -303,3 +303,12 @@ body { background: var(--bg); color: var(--text); }
     margin-right: calc((100vw - var(--board-size)) / 2 + 10px) !important;
   }
 }
+
+
+/* v1.43 — mobile-only: small right padding on the top-level wrapper only */
+@media (max-width: 820px){
+  .app{
+    box-sizing: border-box;
+    padding-right: 10px;
+  }
+}
