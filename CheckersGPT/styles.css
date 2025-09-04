@@ -276,16 +276,33 @@ body { background: var(--bg); color: var(--text); }
   border: 3px solid #f59e0b;
   box-sizing: border-box;
 }
-\n
-/* v1.36 — mobile-only page padding & container widths */
-@media (max-width: 820px){
-  /* Right padding for the whole page content */
-  .app{ box-sizing: border-box; padding-right: 10px; }
 
-  /* Make header and bottom bars respect container padding */
-  .header-row, .bottom-bar{
+
+/* v1.35 — mobile-only: page-wide right padding without overflow */
+@media (max-width: 820px){
+  .app{
     width: 100%;
-    max-width: var(--board-size);
-    margin-left: auto; margin-right: auto;
+    box-sizing: border-box;
+    padding-right: 10px;
+    padding-left: 0;
+  }
+}
+
+
+/* v1.37 — mobile-only: keep left as-is, add right padding for entire page */
+@media (max-width: 820px){
+  :root { --mobile-extra-right: 10px; }
+  body { overflow-x: hidden; } /* avoid horizontal scroll from asymmetric margins */
+
+  /* Apply asymmetric margins to every main section so right side gets extra padding,
+     while left margin stays exactly as before (center baseline). */
+  .header-row,
+  .status,
+  .controls-row,
+  .board-wrap,
+  .bottom-bar {
+    width: var(--board-size);
+    margin-left: calc((100vw - var(--board-size)) / 2);
+    margin-right: calc((100vw - var(--board-size)) / 2 + var(--mobile-extra-right));
   }
 }
