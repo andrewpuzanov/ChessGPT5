@@ -278,7 +278,10 @@ body { background: var(--bg); color: var(--text); }
 }
 
 
-/* v1.31 — mobile-only board sizing to create right padding (matches chess) */
+/* v1.32 — mobile-only: reduce board width to add right-side space (no desktop change) */
 @media (max-width: 820px){
-  :root { --board-size: calc(100vw - 30px); }
+  .board,
+  .board-wrap{
+    width: calc(var(--board-size) - 30px);
+  }
 }
