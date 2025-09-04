@@ -155,7 +155,9 @@ body { background: var(--bg); color: var(--text); }
 
 /* Mobile: hide FEN; add side margins ONLY on width (desktop unaffected) */
 @media (max-width: 820px){
-  #fenBtn { display: none !important; }
+  #fenBtn { display: none !important; 
+  .app{ padding-right: 12px; }
+}
   .app { padding-left: 6px; padding-right: 6px; }
 }
 
@@ -275,29 +277,4 @@ body { background: var(--bg); color: var(--text); }
   border-radius: 50%;
   border: 3px solid #f59e0b;
   box-sizing: border-box;
-}
-
-
-/* v1.28 — mobile-only layout tweaks to match chess */
-@media (max-width: 640px) {
-  .app {
-    padding-right: 12px;
-  }
-  .files-axis {
-    top: calc(100% - 30px);
-  }
-  .ranks-axis {
-    left: -32px;
-  }
-}
-
-
-/* v1.29 — mobile-only layout tuning (strong overrides) */
-@media (max-width: 640px){
-  /* Ensure some breathing room on the right on small screens */
-  .board-wrap{ padding-right: 12px !important; }
-
-  /* Force axes to chess distances */
-  .files-axis{ top: calc(100% - 30px) !important; }
-  .ranks-axis{ left: -32px !important; }
 }
