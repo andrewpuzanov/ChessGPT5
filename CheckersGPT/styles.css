@@ -289,19 +289,17 @@ body { background: var(--bg); color: var(--text); }
 }
 
 
-/* v1.40 — mobile-only: page wrapper to keep left intact and add right padding */
+/* v1.42 — mobile-only: keep left exactly, add +10px on the right across all sections */
 @media (max-width: 820px){
-  .page-wrap{
+  body { overflow-x: hidden; }
+
+  .app > .header-row,
+  .app > .status,
+  .app > .controls-row,
+  .app > .board-wrap,
+  .app > .bottom-bar {
     width: var(--board-size);
-    margin-left: calc((100vw - var(--board-size)) / 2);
-    margin-right: calc((100vw - var(--board-size)) / 2 + 10px);
-  }
-  .page-wrap .header-row,
-  .page-wrap .status,
-  .page-wrap .controls-row,
-  .page-wrap .board-wrap,
-  .page-wrap .bottom-bar{
-    width: 100%;
-    margin: 0;
+    margin-left: calc((100vw - var(--board-size)) / 2) !important;
+    margin-right: calc((100vw - var(--board-size)) / 2 + 10px) !important;
   }
 }
