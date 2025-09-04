@@ -100,26 +100,61 @@ class CheckersEngine{
   movesFor(from,p){
     const {file,rank}=this.coords(from);
     const caps=[], quiets=[];
-    const dirs = (p==='M')?[[1,1],[-1,1]] : (p==='m')?[[1,-1],[-1,-1]] : [[1,1],[-1,1],[1,-1],[-1,-1]];
+    const dirsAll=[[1,1],[-1,1],[1,-1],[-1,-1]];
+    const isManM = (p==='M');
+    const isManm = (p==='m');
+    const isKing = !(isManM||isManm);
+    const dirs = isManM?[[1,1],[-1,1]] : isManm?[[1,-1],[-1,-1]] : dirsAll;
     // Simple moves (non-captures)
-    for(const [df,dr] of dirs){
-      const f2=file+df, r2=rank+dr;
-      if(!this.inBounds(f2,r2)) continue;
-      if(this.board[r2][f2]===null){
-        // Only allowed when no captures across the board
-        quiets.push({from, to:this.toSq(f2,r2), capture:false});
+    if(isKing){
+      // Russian kings can move any distance along diagonals (non-capturing)
+      for(const [df,dr] of dirsAll){
+        let f2=file+df, r2=rank+dr;
+        while(this.inBounds(f2,r2) && this.board[r2][f2]===null){
+          quiets.push({from, to:this.toSq(f2,r2), capture:false});
+          f2+=df; r2+=dr;
+        }
+      }
+    } else {
+      for(const [df,dr] of dirs){
+        const f2=file+df, r2=rank+dr;
+        if(!this.inBounds(f2,r2)) continue;
+        if(this.board[r2][f2]===null){
+          quiets.push({from, to:this.toSq(f2,r2), capture:false});
+        }
       }
     }
-    // Captures (single jump)
-    for(const [df,dr] of dirs){
-      const f1=file+df, r1=rank+dr;
-      const f2=file+2*df, r2=rank+2*dr;
-      if(!this.inBounds(f2,r2) || !this.inBounds(f1,r1)) continue;
-      const over=this.board[r1][f1], dest=this.board[r2][f2];
-      if(dest!==null) continue;
-      if(over && (this.isWhitePiece(over)!==this.isWhitePiece(p))){
-        const capturedSq=this.toSq(f1,r1);
-        caps.push({from, to:this.toSq(f2,r2), capture:true, captured:capturedSq});
+    // Captures (with flying kings per Russian rules)
+    if(isKing){
+      // Scan each diagonal: slide to first enemy, then allow landing on any empty square beyond
+      for(const [df,dr] of dirsAll){
+        let f=file+df, r=rank+dr;
+        // slide through empties
+        while(this.inBounds(f,r) && this.board[r][f]===null){ f+=df; r+=dr; }
+        if(!this.inBounds(f,r)) continue;
+        const over=this.board[r][f];
+        if(over && (this.isWhitePiece(over)!==this.isWhitePiece(p))){
+          const capturedSq=this.toSq(f,r);
+          // step beyond and collect all empty landing squares
+          f+=df; r+=dr;
+          while(this.inBounds(f,r) && this.board[r][f]===null){
+            caps.push({from, to:this.toSq(f,r), capture:true, captured:capturedSq});
+            f+=df; r+=dr;
+          }
+        }
+      }
+    } else {
+      // Men: single-jump captures in all diagonal directions
+      for(const [df,dr] of dirsAll){
+        const f1=file+df, r1=rank+dr;
+        const f2=file+2*df, r2=rank+2*dr;
+        if(!this.inBounds(f2,r2) || !this.inBounds(f1,r1)) continue;
+        const over=this.board[r1][f1], dest=this.board[r2][f2];
+        if(dest!==null) continue;
+        if(over && (this.isWhitePiece(over)!==this.isWhitePiece(p))){
+          const capturedSq=this.toSq(f1,r1);
+          caps.push({from, to:this.toSq(f2,r2), capture:true, captured:capturedSq});
+        }
       }
     }
     return {caps, quiets};
