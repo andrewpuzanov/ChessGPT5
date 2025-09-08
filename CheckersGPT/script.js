@@ -245,7 +245,6 @@ const board=document.getElementById('board'),
       levelSel=document.getElementById('aiLevel'),
       levelWrap=document.getElementById('aiLevelWrap'),
       resetBtn=document.getElementById('resetBtn'),
-      promoBackdrop=document.getElementById('promoBackdrop'),
       fenBtn=document.getElementById('fenBtn'),
       toast=document.getElementById('toast'),
       filesAxis=document.getElementById('filesAxis'),
@@ -569,30 +568,6 @@ function scheduleAI(){
   if (modeSel.value!=='ai' || state.engine.turn!=='b') return;
   clearTimeout(state.aiTimer);
   state.aiTimer = setTimeout(aiMove, 250);
-}
-
-/* -------------- Promotion dialog -------------- */
-function openPromotion(){
-  const backdrop=document.getElementById('promoBackdrop');
-  const whiteTurn = state.engine.turn === 'w';
-  const icons = whiteTurn
-    ? { q: PIECE_UNICODE['Q'], r: PIECE_UNICODE['R'], b: PIECE_UNICODE['B'], n: PIECE_UNICODE['N'] }
-    : { q: PIECE_UNICODE['q'], r: PIECE_UNICODE['r'], b: PIECE_UNICODE['b'], n: PIECE_UNICODE['n'] };
-  backdrop.querySelectorAll('.promo-choices button').forEach(btn=>{
-    const code=btn.getAttribute('data-piece');
-    const span=btn.querySelector('.promo-icon');
-    if(span && icons[code]) span.textContent = icons[code];
-  });
-  backdrop.classList.remove('hidden');
-  return new Promise(resolve=>{
-    const handler=(ev)=>{
-      const btn=ev.target.closest('button[data-piece]');
-      if(!btn) return;
-      const code=btn.dataset.piece; cleanup(); resolve(code);
-    };
-    const cleanup=()=>{ backdrop.classList.add('hidden'); backdrop.removeEventListener('click', handler); };
-    backdrop.addEventListener('click', handler);
-  });
 }
 
 function renderAxesAndBoard(){ buildBoard(); renderPieces(); renderAxes(); }
